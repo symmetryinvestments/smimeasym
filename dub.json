@@ -1,0 +1,15 @@
+{
+	"authors": [
+		"Robert Schadek"
+	],
+	"copyright": "Copyright © 2021, Symmetry Investments",
+	"description": "A wrapper around openssl's S/MIME asymmetrical encryption, that is compatible with the openssl cli",
+	"preBuildCommands": ["make"],
+	"libs": [
+		"ssl",
+		"crypto"
+	],
+	"lflags" : ["chelper.o"],
+	"license": "AGPL3",
+	"name": "smimeasym"
+}
