@@ -1,4 +1,4 @@
-module smimeasym.helper;
+module smimeasym;
 
 import std.exception : enforce;
 import std.file : exists, isFile;
