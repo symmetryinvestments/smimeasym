@@ -29,7 +29,7 @@ jobs:
         fetch-depth: 0
 
     - name: Install openssl
-      os: [ macOS-latest]
+      runs-on: ubuntu-latest
       run: |
         brew install openssl
 
