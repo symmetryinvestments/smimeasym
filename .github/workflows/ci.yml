@@ -31,7 +31,7 @@ jobs:
     - name: Install openssl
       if: ${{ matrix.os == 'macOS-latest' }}
       run: |
-        brew install openssl
+        brew install openssl autoconf automake pkg-config
 
     - name: Install compiler
       uses: dlang-community/setup-dlang@v1
