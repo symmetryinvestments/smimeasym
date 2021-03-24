@@ -28,10 +28,10 @@ jobs:
       with:
         fetch-depth: 0
 
-	- name: Install openssl
-	  os: [ macOS-latest]
-	  run: |
-		brew install openssl
+    - name: Install openssl
+      os: [ macOS-latest]
+      run: |
+        brew install openssl
 
     - name: Install compiler
       uses: dlang-community/setup-dlang@v1
