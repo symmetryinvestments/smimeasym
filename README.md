@@ -18,6 +18,10 @@ There are two main functions
 ubyte[] smimeEncryption(ubyte[] buf, string[] publicKeyFilenames);
 
 ubyte[] smimeDecryption(ubyte[] buf, string privateKeyFilename);
+
+X509* loadCert(string filename);
+
+ubyte[] smimeEncryptionWithCerts(ubyte[] buf, X509*[] certs);
 ```
 
 The opencli should be able to decrypt created files from the data from
