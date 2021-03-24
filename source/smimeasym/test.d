@@ -1,10 +1,12 @@
 module smimeasym.test;
 
-import std.stdio;
+import std.algorithm.comparison : equal;
+import std.conv : to;
+import std.exception : assertThrown;
 import std.file : read, readText, deleteme, write;
 import std.format : format;
 import std.process : executeShell;
-import std.conv : to;
+import std.stdio;
 
 import smimeasym;
 
@@ -57,9 +59,26 @@ unittest {
 		assert(data == decrpStr, format("\norig: %s\ndecr: %s", data, decrpStr));
 	}
 
+	X509*[] keys;
+	assertThrown(smimeEncryptionWithCerts(cast(ubyte[])data, keys));
+	keys ~= null;
+	assertThrown(smimeEncryptionWithCerts(cast(ubyte[])data, keys));
+	keys = [];
+
+	foreach(pubKey; pubKeys) {
+		auto t = loadCert(pubKey);
+		assert(t != null, pubKey);
+		keys ~= t;
+	}
+	ubyte[] encArray = smimeEncryptionWithCerts(cast(ubyte[])data, keys);
+
 	// encrypt with this library and write to disk
 	string encFilename = deleteme ~ ".src";
 	ubyte[] enc = smimeEncryption(cast(ubyte[])data, pubKeys);
+
+	// as the aes key should be random these shouldn't match
+	assert(!equal(enc, encArray));
+
 	write(encFilename, enc);
 	scope(success) {
 		deleteThat(encFilename);
@@ -88,4 +107,34 @@ unittest {
 			deleteThat(decLibFilename);
 		}
 	}
+}
+
+unittest {
+	string data = "Hello openssl world";
+	string[] pubKeys = [ "dub.json"];
+	assertThrown(smimeEncryption(cast(ubyte[])data, pubKeys));
+}
+
+unittest {
+	string data = "Hello openssl world";
+	string privKeys = "dub.json";
+	assertThrown(smimeDecryption(cast(ubyte[])data, privKeys));
+}
+
+unittest {
+	string data = "Hello openssl world";
+	string privKeys = "alice.key";
+	assertThrown(smimeDecryption(cast(ubyte[])data, privKeys));
+}
+
+unittest {
+	string data = "Hello openssl world";
+	string privKeys = "source";
+	assertThrown(smimeDecryption(cast(ubyte[])data, privKeys));
+}
+
+unittest {
+	string data = "Hello openssl world";
+	string privKeys = "doesnotexist";
+	assertThrown(smimeDecryption(cast(ubyte[])data, privKeys));
 }

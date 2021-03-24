@@ -1,11 +1,14 @@
 module smimeasym;
 
+import std.array : empty;
 import std.exception : enforce;
 import std.file : exists, isFile;
 import std.format : format;
 import std.string;
 
 import smimeasym.sslimports;
+
+public import smimeasym.sslimports : X509;
 
 extern(C) {
 private:
@@ -20,15 +23,33 @@ Buffer smime_main_encryption_with_certs(Buffer buf, X509** certs
 Buffer smime_main_encryption(Buffer buf, char** certs, size_t numCerts);
 Buffer smime_main_decryption(Buffer inFile, char* privKeyFilename);
 void freeBuffer(Buffer buf);
+int lengthErrorsArray();
+
+struct Error {
+	int errorCode;
+	const char* msg;
+}
+Error* errorsSmimeHandler();
 }
 
 private ubyte[] copyAnFreeBuffer(Buffer rslt) {
+	enforce(rslt.len >= 0, getErrorString(rslt.len));
 	ubyte[] ret = new ubyte[](rslt.len);
 	foreach(it; 0 .. rslt.len) {
 		ret[it] = rslt.source[it];
 	}
 	freeBuffer(rslt);
 	return ret;
+}
+
+private string getErrorString(const long errCode) {
+	Error* errorArr = errorsSmimeHandler();
+	for(int i = 0; i < lengthErrorsArray(); ++i) {
+		if(errorArr[i].errorCode == errCode) {
+			return fromStringz(errorArr[i].msg).idup;
+		}
+	}
+	return "Unknonw error";
 }
 
 X509* loadCert(string filename) {
@@ -55,6 +76,10 @@ ubyte[] smimeEncryption(ubyte[] buf, string[] publicKeyFilenames) {
 }
 
 ubyte[] smimeEncryptionWithCerts(ubyte[] buf, X509*[] certs) {
+	import std.algorithm.searching : all;
+
+	enforce(!certs.empty, "certs array must not be empty");
+	enforce(certs.all!(c => c != null), "no cert must be null");
 	Buffer toPass;
 	toPass.len = buf.length;
 	toPass.source = buf.ptr;

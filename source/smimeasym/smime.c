@@ -212,7 +212,7 @@ static BIO *bio_open_default(const char *filename, char mode, int format) {
 }
 
 static X509 *load_certImpl(const char *file, int format
-	, const char *cert_descrip) 
+	, const char *cert_descrip)
 {
 	X509 *x = NULL;
 	BIO *cert = bio_open_default(file, 'r', format);
@@ -246,16 +246,18 @@ X509 *load_cert(const char *file) {
 Buffer smime_main_encryption(Buffer buf
 	, char** certs, size_t numCerts)
 {
-	// The public keys/certs are the leftover arguments 
+	// The public keys/certs are the leftover arguments
 	// now we pass them in as certs
 	Buffer ret;
 	ret.len = -1;
 	X509 **certsLoaded = (X509**)malloc(sizeof(X509*) * numCerts);
 	for(size_t i = 0; i < numCerts; ++i) {
-		certsLoaded[i] = load_cert(certs[i]);
-		if(certsLoaded == NULL) {
+		X509* tmp = load_cert(certs[i]);
+		if(tmp == NULL) {
+			ret.len = -4;
 			goto end;
 		}
+		certsLoaded[i] = tmp;
 	}
 
 	ret = smime_main_encryption_with_certs(buf, certsLoaded, numCerts);
@@ -265,7 +267,7 @@ end:
 }
 
 Buffer smime_main_encryption_with_certs(Buffer buf, X509** certs
-	, size_t numCerts) 
+	, size_t numCerts)
 {
 	STACK_OF(X509) *encerts = sk_X509_new_null();
 
@@ -292,7 +294,11 @@ typedef struct ErrorImpl {
 
 #define ERRORARRAYLENGTH 12
 
-Error errors[ERRORARRAYLENGTH] = 
+int lengthErrorsArray() {
+	return ERRORARRAYLENGTH;
+}
+
+Error __errorsSmimeHandler[ERRORARRAYLENGTH] =
 	{ {  -1, "X509 verify param new failed" }
 	, {  -2, "Multiple signers or keys not allowed" }
 	, {  -3, "Cipher must not be NULL" }
@@ -306,6 +312,10 @@ Error errors[ERRORARRAYLENGTH] =
 	, { -11, "Error reading S/MIME message" }
 	, { -12, "Error decrypting PKCS#7 structure" }
 	};
+
+Error* errorsSmimeHandler() {
+	return __errorsSmimeHandler;
+}
 
 Buffer smime_main_encryptionImpl(Buffer buf, STACK_OF(X509) *encerts) {
 	BIO *in = NULL;
@@ -410,7 +420,7 @@ Buffer smime_main_encryptionImpl(Buffer buf, STACK_OF(X509) *encerts) {
 }
 
 Buffer smime_main_decryption(Buffer inFile
-		, const char* privKeyFilename) 
+		, const char* privKeyFilename)
 {
 	BIO *in = NULL;
 	BIO *out = NULL;
