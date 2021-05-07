@@ -60,6 +60,7 @@ unittest {
 	}
 
 	X509*[] keys;
+	X509*[] keys2;
 	assertThrown(smimeEncryptionWithCerts(cast(ubyte[])data, keys));
 	keys ~= null;
 	assertThrown(smimeEncryptionWithCerts(cast(ubyte[])data, keys));
@@ -70,7 +71,12 @@ unittest {
 		assert(t != null, pubKey);
 		keys ~= t;
 	}
+	foreach(pubKey; pubKeys) {
+		string c = readText(pubKey);
+		keys2 ~= loadCertFromString(c);
+	}
 	ubyte[] encArray = smimeEncryptionWithCerts(cast(ubyte[])data, keys);
+	ubyte[] encArray2 = smimeEncryptionWithCerts(cast(ubyte[])data, keys2);
 
 	// encrypt with this library and write to disk
 	string encFilename = deleteme ~ ".src";
@@ -87,6 +93,11 @@ unittest {
 	// decrypt with private keys
 	foreach(privKey; privKeys) {
 		ubyte[] decrp = smimeDecryption(enc, privKey);
+		string decrpStr = cast(string)decrp;
+		assert(data == decrpStr, format("\norig: %s\ndecr: %s", data, decrpStr));
+	}
+	foreach(privKey; privKeys) {
+		ubyte[] decrp = smimeDecryption(encArray2, privKey);
 		string decrpStr = cast(string)decrp;
 		assert(data == decrpStr, format("\norig: %s\ndecr: %s", data, decrpStr));
 	}

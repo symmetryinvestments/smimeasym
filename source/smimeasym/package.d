@@ -24,6 +24,7 @@ Buffer smime_main_encryption(Buffer buf, char** certs, size_t numCerts);
 Buffer smime_main_decryption(Buffer inFile, char* privKeyFilename);
 void freeBuffer(Buffer buf);
 int lengthErrorsArray();
+X509* load_cert_from_memory(const char* d, size_t len);
 
 struct Error {
 	int errorCode;
@@ -56,6 +57,12 @@ X509* loadCert(string filename) {
 	enforce(exists(filename), format("Cert '%s' doesn't exist", filename));
 	enforce(isFile(filename), format("Cert '%s' is not a file", filename));
 	return load_cert(filename.toStringz());
+}
+
+X509* loadCertFromString(string data) {
+	import std.string : toStringz;
+	const(char)* c = toStringz(data);
+	return load_cert_from_memory(c, data.length);
 }
 
 ubyte[] smimeEncryption(ubyte[] buf, string[] publicKeyFilenames) {

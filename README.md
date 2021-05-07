@@ -20,6 +20,7 @@ ubyte[] smimeEncryption(ubyte[] buf, string[] publicKeyFilenames);
 ubyte[] smimeDecryption(ubyte[] buf, string privateKeyFilename);
 
 X509* loadCert(string filename);
+X509* loadCertFromString(string theCert);
 
 ubyte[] smimeEncryptionWithCerts(ubyte[] buf, X509*[] certs);
 ```

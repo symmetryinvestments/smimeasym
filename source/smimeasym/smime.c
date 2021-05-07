@@ -239,6 +239,17 @@ static X509 *load_certImpl(const char *file, int format
 	return x;
 }
 
+X509 *load_cert_from_memory(const char* d, size_t len) {
+	BIO* in = BIO_new(BIO_s_mem());
+	if(in == NULL) {
+		return NULL;
+	}
+	BIO_write(in, d, (int)len);
+	X509* x = PEM_read_bio_X509_AUX(in, NULL, 0, NULL);
+	BIO_free(in);
+	return x;
+}
+
 X509 *load_cert(const char *file) {
 	return load_certImpl(file, FORMAT_PEM, "recipient certificate file");
 }
