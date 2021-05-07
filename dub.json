@@ -4,7 +4,7 @@
 	],
 	"copyright": "Copyright © 2021, Symmetry Investments",
 	"description": "A wrapper around openssl's S/MIME asymmetrical encryption, that is compatible with the openssl cli",
-	"preBuildCommands": ["make"],
+	"preBuildCommands": [ "make -C $PACKAGE_DIR" ],
 	"libs": [
 		"ssl",
 		"crypto"
