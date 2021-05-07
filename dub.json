@@ -7,9 +7,14 @@
 	"preBuildCommands": [ "make -C $PACKAGE_DIR" ],
 	"libs": [
 		"ssl",
-		"crypto"
+		"crypto",
+		"smimeasymc"
 	],
-	"lflags" : ["chelper.o"],
+
+	"libs-posix" : [],
+	"lflags-posix": [
+		"-L$PACKAGE_DIR/"
+	],
 	"license": "AGPL3",
 	"name": "smimeasym"
 }
