@@ -31,6 +31,7 @@ struct Error {
 	const char* msg;
 }
 Error* errorsSmimeHandler();
+public void freeCert(X509* certToFree);
 }
 
 private ubyte[] copyAnFreeBuffer(Buffer rslt) {

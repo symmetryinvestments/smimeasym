@@ -21,6 +21,7 @@ ubyte[] smimeDecryption(ubyte[] buf, string privateKeyFilename);
 
 X509* loadCert(string filename);
 X509* loadCertFromString(string theCert);
+void freeCert(X509* certToFree);
 
 ubyte[] smimeEncryptionWithCerts(ubyte[] buf, X509*[] certs);
 ```

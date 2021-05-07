@@ -138,6 +138,12 @@ void freeBuffer(Buffer buf) {
 	}
 }
 
+void freeCert(X509* certToFree) {
+	if(certToFree != NULL) {
+		X509_free(certToFree);
+	}
+}
+
 EVP_PKEY *load_key(const char *file, int format, int maybe_stdin
 	, const char *pass, ENGINE *e, const char *key_descrip)
 {

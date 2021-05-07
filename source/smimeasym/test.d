@@ -118,6 +118,12 @@ unittest {
 			deleteThat(decLibFilename);
 		}
 	}
+	foreach(cert; keys) {
+		freeCert(cert);
+	}
+	foreach(cert; keys2) {
+		freeCert(cert);
+	}
 }
 
 unittest {
