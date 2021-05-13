@@ -3,4 +3,3 @@ libsmimeasymc.a: chelper.o
 
 chelper.o: source/smimeasym/smime.c
 	gcc -Wall -O0 -c $? -o $@ `pkg-config --cflags --libs openssl` -lcrypto
-	ar rcs libout.a out.o
