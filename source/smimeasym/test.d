@@ -155,3 +155,9 @@ unittest {
 	string privKeys = "doesnotexist";
 	assertThrown(smimeDecryption(cast(ubyte[])data, privKeys));
 }
+
+unittest {
+	string notAKey = "Not a key";
+	auto k = loadCertFromString(notAKey);
+	assert(k is null);
+}
