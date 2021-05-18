@@ -161,3 +161,13 @@ unittest {
 	auto k = loadCertFromString(notAKey);
 	assert(k is null);
 }
+
+unittest {
+	auto r = cast(ubyte[])read("README.md");
+	auto p = loadCert("./alice.pub");
+	auto e = smimeEncryptionWithCerts(r, [p]);
+	auto d = smimeDecryption(e, "./alice.key");
+	write("textOrBinary.enc", e);
+	assert(r == d, format("%.3s %.3s\n%s\n\n%s\n%s", r.length, d.length, r, d,
+				cast(string)d));
+}

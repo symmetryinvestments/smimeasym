@@ -64,7 +64,9 @@
 
 # define B_FORMAT_TEXT 0x8000
 # define FORMAT_ASN1 4					  /* ASN.1/DER */
+//# define FORMAT_PEM (5 | B_FORMAT_TEXT)
 # define FORMAT_PEM (5 | B_FORMAT_TEXT)
+# define FORMAT_BINARY   2                      /* Generic binary */
 # define FORMAT_PKCS12 6
 # define FORMAT_SMIME (7 | B_FORMAT_TEXT)
 # define FORMAT_ENGINE 8					  /* Not really a file format */
@@ -350,7 +352,8 @@ Buffer smime_main_encryptionImpl(Buffer buf, STACK_OF(X509) *encerts) {
 	const EVP_CIPHER *cipher = EVP_aes_256_cbc();
 	char *keyfile = NULL;
 	char *passin = NULL;
-	int flags = PKCS7_DETACHED;
+	//int flags = PKCS7_DETACHED | PKCS7_BINARY | PKCS7_TEXT;
+	int flags = PKCS7_BINARY;
 	int keyform = FORMAT_PEM;
 	int rv = 0;
 	ENGINE *e = NULL;
@@ -454,7 +457,8 @@ Buffer smime_main_decryption(Buffer inFile
 	X509_VERIFY_PARAM *vpm = NULL;
 	const char *keyfile = privKeyFilename;
 	char *passin = NULL;
-	int flags = PKCS7_DETACHED;
+	int flags = PKCS7_BINARY;
+	//int informat = FORMAT_PEM;
 	int informat = FORMAT_PEM;
 	int keyform = FORMAT_PEM;
 	ENGINE *e = NULL;
@@ -501,7 +505,7 @@ Buffer smime_main_decryption(Buffer inFile
 		goto end;
 	}
 
-	if(!PKCS7_decrypt(p7, key, recip, out, flags)) {
+	if(PKCS7_decrypt(p7, key, recip, out, flags) == 0) {
 		ret.len = -12;
 		goto end;
 	}
