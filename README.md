@@ -29,6 +29,8 @@ X509* loadCertFromString(string theCert);
 void freeCert(X509* certToFree);
 
 ubyte[] smimeEncryptionWithCerts(ubyte[] buf, X509*[] certs);
+EVP_PKEY* loadKeyFromString(string data, string password = "");
+ubyte[] smimeDecryptionWithKey(ubyte[] buf, EVP_PKEY* key);
 ```
 
 The opencli should be able to decrypt created files from the data from
@@ -40,4 +42,4 @@ openssl smime -decrypt -in secrets.txt.enc -inform PEM -inkey bob.key
 
 ## Tests
 
-The password for the private key frank_with_pass.key is **strongpassword**.
+The password for the private key frank_with_pass.key is **foobar**.

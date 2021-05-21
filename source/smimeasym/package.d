@@ -1,5 +1,6 @@
 module smimeasym;
 
+import std.stdio;
 import std.array : empty;
 import std.exception : enforce;
 import std.file : exists, isFile;
@@ -39,6 +40,7 @@ public void freeCert(X509* certToFree);
 }
 
 private ubyte[] copyAnFreeBuffer(Buffer rslt) {
+	import std.stdio;
 	enforce(rslt.len >= 0, getErrorString(rslt.len));
 	ubyte[] ret = new ubyte[](rslt.len);
 	foreach(it; 0 .. rslt.len) {

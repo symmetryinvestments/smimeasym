@@ -34,6 +34,10 @@
 //
 // you should see a new file secrets.txt.enc
 //
+// ## Encrypt with openssl
+//
+// openssl smime -encrypt -aes256 -in secrets.txt -out secrets.txt.enc -outform PEM bob.pub alice.pub frank.pub carol.pub
+//
 // ## Decrypt secrets.txt.enc with openssl
 //
 // openssl smime -decrypt -in secrets.txt.enc -inform PEM -inkey bob.key
@@ -106,9 +110,28 @@ static const char *modestr(char mode, int format) {
 	return NULL;
 }
 
-static int pass_cb(char* a, int b, int c, void* d) {
-	return -1;
+static int pass_cb(char *buf, int size, int rwflag, void *password) {
+	strncpy(buf, (char *)password, size);
+	buf[size - 1] = '\0';
+	return strlen(buf);
 }
+
+//static int pass_cb(char *buf, int size, int rwflag, void *u) {
+//       int len;
+//       char *tmp;
+//       /* We'd probably do something else if 'rwflag' is 1 */
+//       printf("Enter pass phrase for \"%s\"\n", u);
+//
+//       /* get pass phrase, length 'len' into 'tmp' */
+//       tmp = "hello";
+//       len = strlen(tmp);
+//
+//       if (len <= 0) return 0;
+//       /* if too long, truncate */
+//       if (len > size) len = size;
+//       memcpy(buf, tmp, len);
+//       return len;
+//}
 
 static int load_pkcs12(BIO *in, const char *desc
 	, pem_password_cb * unused, void * unused2, EVP_PKEY **pkey, X509 **cert
@@ -164,13 +187,15 @@ EVP_PKEY* load_key_from_memory(const char* ptr, int len, const char* password) {
 	if(in == NULL) {
 		return NULL;
 	}
-	BIO_write(in, ptr, (int)len);
 
-	PW_CB_DATA cb_data;
-	cb_data.password = password;
-	//cb_data.prompt_info = file;
+	int r = BIO_write(in, ptr, (int)len);
+	if(r <= 0) {
+		return NULL;
+	}
 
-	EVP_PKEY* pkey = PEM_read_bio_PrivateKey(in, NULL, pass_cb, &cb_data);
+	EVP_PKEY* pkey = PEM_read_bio_PrivateKey(in, NULL, pass_cb
+			, (char*)password);
+
 	BIO_free(in);
 	return pkey;
 }

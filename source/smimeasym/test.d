@@ -208,7 +208,8 @@ unittest {
 	string data = "Hello openssl world";
 	ubyte[] r = smimeEncryption(cast(ubyte[])data, ["frank_with_pass.pub"]);
 	EVP_PKEY* privKey = loadKeyFromString(readText("frank_with_pass.key")
-			, "stringpassword");
+			, "foobar");
+	assert(privKey != null);
 	ubyte[] d = smimeDecryptionWithKey(r, privKey);
 	string rslt = cast(string)d;
 	assert(data == rslt, rslt);
