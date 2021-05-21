@@ -8,7 +8,7 @@ import std.string;
 
 import smimeasym.sslimports;
 
-public import smimeasym.sslimports : X509;
+public import smimeasym.sslimports : X509, EVP_PKEY;
 
 extern(C) {
 private:
@@ -18,10 +18,13 @@ struct Buffer {
 }
 
 X509 *load_cert(const char *file);
+EVP_PKEY* load_key(const char* keyfile);
+public void freePrivKey(EVP_PKEY* key);
 Buffer smime_main_encryption_with_certs(Buffer buf, X509** certs
 		, size_t numCerts);
 Buffer smime_main_encryption(Buffer buf, char** certs, size_t numCerts);
 Buffer smime_main_decryption(Buffer inFile, char* privKeyFilename);
+Buffer smime_main_decryption_with_key(Buffer inFile, EVP_PKEY* privKey);
 void freeBuffer(Buffer buf);
 int lengthErrorsArray();
 X509* load_cert_from_memory(const char* d, size_t len);
@@ -64,6 +67,12 @@ X509* loadCertFromString(string data) {
 	import std.string : toStringz;
 	const(char)* c = toStringz(data);
 	return load_cert_from_memory(c, data.length);
+}
+
+EVP_PKEY* loadKey(string keyfilename) {
+	import std.string : toStringz;
+	const(char)* c = toStringz(keyfilename);
+	return load_key(c);
 }
 
 ubyte[] smimeEncryption(ubyte[] buf, string[] publicKeyFilenames) {
@@ -109,6 +118,16 @@ ubyte[] smimeDecryption(ubyte[] buf, string privateKeyFilename) {
 
 	Buffer rslt = smime_main_decryption(toPass
 			, cast(char*)privateKeyFilename.ptr);
+
+	return copyAnFreeBuffer(rslt);
+}
+
+ubyte[] smimeDecryptionWithKey(ubyte[] buf, EVP_PKEY* key) {
+	Buffer toPass;
+	toPass.len = buf.length;
+	toPass.source = buf.ptr;
+
+	Buffer rslt = smime_main_decryption_with_key(toPass, key);
 
 	return copyAnFreeBuffer(rslt);
 }

@@ -66,6 +66,11 @@ unittest {
 	assertThrown(smimeEncryptionWithCerts(cast(ubyte[])data, keys));
 	keys = [];
 
+	EVP_PKEY*[] privKeysPtr;
+	foreach(pk; privKeys) {
+		privKeysPtr ~= loadKey(pk);
+	}
+
 	foreach(pubKey; pubKeys) {
 		auto t = loadCert(pubKey);
 		assert(t != null, pubKey);
@@ -96,8 +101,16 @@ unittest {
 		string decrpStr = cast(string)decrp;
 		assert(data == decrpStr, format("\norig: %s\ndecr: %s", data, decrpStr));
 	}
+
 	foreach(privKey; privKeys) {
 		ubyte[] decrp = smimeDecryption(encArray2, privKey);
+		string decrpStr = cast(string)decrp;
+		assert(data == decrpStr, format("\norig: %s\ndecr: %s", data, decrpStr));
+	}
+
+	// decrypt with private keys in memory
+	foreach(privKey; privKeysPtr) {
+		ubyte[] decrp = smimeDecryptionWithKey(encArray2, privKey);
 		string decrpStr = cast(string)decrp;
 		assert(data == decrpStr, format("\norig: %s\ndecr: %s", data, decrpStr));
 	}
@@ -123,6 +136,9 @@ unittest {
 	}
 	foreach(cert; keys2) {
 		freeCert(cert);
+	}
+	foreach(cert; privKeysPtr) {
+		freePrivKey(cert);
 	}
 }
 

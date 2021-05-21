@@ -75,7 +75,8 @@
 
 BIO *bio_err;
 
-EVP_PKEY *load_key(const char *file, int format, int maybe_stdin
+EVP_PKEY *load_key(const char *file);
+EVP_PKEY *load_key_impl(const char *file, int format, int maybe_stdin
 	, const char *pass, ENGINE *e, const char *key_descrip);
 
 typedef struct BufferImpl {
@@ -146,7 +147,19 @@ void freeCert(X509* certToFree) {
 	}
 }
 
-EVP_PKEY *load_key(const char *file, int format, int maybe_stdin
+void freePrivKey(EVP_PKEY* key) {
+	EVP_PKEY_free(key);
+}
+
+EVP_PKEY* load_key(const char* keyfile) {
+	int keyform = FORMAT_PEM;
+	char *passin = NULL;
+	ENGINE *e = NULL;
+	EVP_PKEY* key = load_key_impl(keyfile, keyform, 0, passin, e, "signing key file");
+	return key;
+}
+
+EVP_PKEY* load_key_impl(const char *file, int format, int maybe_stdin
 	, const char *pass, ENGINE *e, const char *key_descrip)
 {
 	BIO *key = NULL;
@@ -381,7 +394,7 @@ Buffer smime_main_encryptionImpl(Buffer buf, STACK_OF(X509) *encerts) {
 	keyfile = NULL;
 
 	if(keyfile != NULL) {
-		key = load_key(keyfile, keyform, 0, passin, e, "signing key file");
+		key = load_key_impl(keyfile, keyform, 0, passin, e, "signing key file");
 		if(key == NULL) {
 			ret.len = -4;
 			goto end;
@@ -439,9 +452,79 @@ Buffer smime_main_encryptionImpl(Buffer buf, STACK_OF(X509) *encerts) {
 	return ret;
 }
 
-Buffer smime_main_decryption(Buffer inFile
-		, const char* privKeyFilename)
-{
+Buffer smime_main_decryption_with_key(Buffer inFile, EVP_PKEY* privKey) {
+	BIO *in = NULL;
+	BIO *out = NULL;
+	BIO *indata = NULL;
+	PKCS7 *p7 = NULL;
+	X509 *recip = NULL;
+	X509_VERIFY_PARAM *vpm = NULL;
+	int flags = PKCS7_BINARY;
+	//int informat = FORMAT_PEM;
+	int informat = FORMAT_PEM;
+
+	Buffer ret;
+	ret.len = -1;
+
+	if((vpm = X509_VERIFY_PARAM_new()) == NULL) {
+		ret.len = -1;
+		goto end;
+	}
+
+	if(privKey == NULL) {
+		ret.len = -10;
+		goto end;
+	}
+
+	in = BIO_new(BIO_s_mem());
+	if(in == NULL) {
+		ret.len = -5;
+		goto end;
+	}
+	BIO_write(in, inFile.source, (int)inFile.len);
+
+	if(informat == FORMAT_SMIME) {
+		p7 = SMIME_read_PKCS7(in, &indata);
+	} else if(informat == FORMAT_PEM) {
+		p7 = PEM_read_bio_PKCS7(in, NULL, NULL, NULL);
+	}
+
+	if(p7 == NULL) {
+		ret.len = -11;
+		goto end;
+	}
+	out = BIO_new(BIO_s_mem());
+	if(out == NULL) {
+		ret.len = -6;
+		goto end;
+	}
+
+	if(PKCS7_decrypt(p7, privKey, recip, out, flags) == 0) {
+		ret.len = -12;
+		goto end;
+	}
+
+	ret.len = 0;
+
+	char* data;
+	ret.len = BIO_get_mem_data(out, &data);
+	ret.source = (unsigned char*)malloc(ret.len);
+	BIO_read(out, ret.source, ret.len);
+
+ end:
+	if(ret.len) {
+		ERR_print_errors(bio_err);
+	}
+	X509_VERIFY_PARAM_free(vpm);
+	X509_free(recip);
+	PKCS7_free(p7);
+	BIO_free(in);
+	BIO_free(indata);
+	BIO_free_all(out);
+	return ret;
+}
+
+Buffer smime_main_decryption(Buffer inFile, const char* privKeyFilename) {
 	BIO *in = NULL;
 	BIO *out = NULL;
 	BIO *indata = NULL;
@@ -476,7 +559,7 @@ Buffer smime_main_decryption(Buffer inFile
 		goto end;
 	}
 
-	key = load_key(keyfile, keyform, 0, passin, e, "signing key file");
+	key = load_key_impl(keyfile, keyform, 0, passin, e, "signing key file");
 	if(key == NULL) {
 		ret.len = -10;
 		goto end;
