@@ -159,6 +159,22 @@ EVP_PKEY* load_key(const char* keyfile) {
 	return key;
 }
 
+EVP_PKEY* load_key_from_memory(const char* ptr, int len, const char* password) {
+	BIO* in = BIO_new(BIO_s_mem());
+	if(in == NULL) {
+		return NULL;
+	}
+	BIO_write(in, ptr, (int)len);
+
+	PW_CB_DATA cb_data;
+	cb_data.password = password;
+	//cb_data.prompt_info = file;
+
+	EVP_PKEY* pkey = PEM_read_bio_PrivateKey(in, NULL, pass_cb, &cb_data);
+	BIO_free(in);
+	return pkey;
+}
+
 EVP_PKEY* load_key_impl(const char *file, int format, int maybe_stdin
 	, const char *pass, ENGINE *e, const char *key_descrip)
 {

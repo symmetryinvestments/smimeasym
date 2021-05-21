@@ -71,6 +71,12 @@ unittest {
 		privKeysPtr ~= loadKey(pk);
 	}
 
+	EVP_PKEY*[] privKeysPtr2;
+	foreach(pk; privKeys) {
+		privKeysPtr2 ~= loadKeyFromString(readText(pk));
+	}
+
+
 	foreach(pubKey; pubKeys) {
 		auto t = loadCert(pubKey);
 		assert(t != null, pubKey);
@@ -115,6 +121,13 @@ unittest {
 		assert(data == decrpStr, format("\norig: %s\ndecr: %s", data, decrpStr));
 	}
 
+	// decrypt with private keys in memory
+	foreach(privKey; privKeysPtr2) {
+		ubyte[] decrp = smimeDecryptionWithKey(encArray2, privKey);
+		string decrpStr = cast(string)decrp;
+		assert(data == decrpStr, format("\norig: %s\ndecr: %s", data, decrpStr));
+	}
+
 	// decrypt with private keys on cli
 	foreach(idx, privKey; privKeys) {
 		string decLibFilename = format("%s.%d.enc.lib", deleteme, idx);
@@ -138,6 +151,9 @@ unittest {
 		freeCert(cert);
 	}
 	foreach(cert; privKeysPtr) {
+		freePrivKey(cert);
+	}
+	foreach(cert; privKeysPtr2) {
 		freePrivKey(cert);
 	}
 }
@@ -186,4 +202,15 @@ unittest {
 	write("textOrBinary.enc", e);
 	assert(r == d, format("%.3s %.3s\n%s\n\n%s\n%s", r.length, d.length, r, d,
 				cast(string)d));
+}
+
+unittest {
+	string data = "Hello openssl world";
+	ubyte[] r = smimeEncryption(cast(ubyte[])data, ["frank_with_pass.pub"]);
+	EVP_PKEY* privKey = loadKeyFromString(readText("frank_with_pass.key")
+			, "stringpassword");
+	ubyte[] d = smimeDecryptionWithKey(r, privKey);
+	string rslt = cast(string)d;
+	assert(data == rslt, rslt);
+	freePrivKey(privKey);
 }

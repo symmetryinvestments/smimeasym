@@ -12,6 +12,11 @@ This should be possible with the openssl cli.
 
 ## Usage
 
+Key pair suitable
+```sh
+openssl req -x509 -newkey rsa:4096 -days 3650 -nodes -subj "/C=US/ST=*/L=*/O=*/OU=*/CN=Frank/" -keyout frank.key -out frank.pub
+```
+
 There are two main functions
 
 ```D
@@ -32,3 +37,7 @@ smimeEncryption with the following shell command
 ```sh
 openssl smime -decrypt -in secrets.txt.enc -inform PEM -inkey bob.key
 ```
+
+## Tests
+
+The password for the private key frank_with_pass.key is **strongpassword**.

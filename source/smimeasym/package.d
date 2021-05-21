@@ -18,6 +18,7 @@ struct Buffer {
 }
 
 X509 *load_cert(const char *file);
+EVP_PKEY* load_key_from_memory(const char* ptr, int len, const char* password);
 EVP_PKEY* load_key(const char* keyfile);
 public void freePrivKey(EVP_PKEY* key);
 Buffer smime_main_encryption_with_certs(Buffer buf, X509** certs
@@ -73,6 +74,12 @@ EVP_PKEY* loadKey(string keyfilename) {
 	import std.string : toStringz;
 	const(char)* c = toStringz(keyfilename);
 	return load_key(c);
+}
+
+EVP_PKEY* loadKeyFromString(string data, string password = "") {
+	import std.string : toStringz;
+	const(char)* c = toStringz(data);
+	return load_key_from_memory(c, cast(int)data.length, toStringz(password));
 }
 
 ubyte[] smimeEncryption(ubyte[] buf, string[] publicKeyFilenames) {
