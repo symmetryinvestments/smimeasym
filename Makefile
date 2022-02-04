@@ -1,5 +1,5 @@
 libsmimeasymc.a: chelper.o
-	ar rcs $@ $?
+	$(AR) rcs $@ $?
 
 chelper.o: source/smimeasym/smime.c
-	gcc -Wall -O0 -c $? -o $@ `pkg-config --cflags --libs openssl` -lcrypto
+	$(CC) -Wall -O0 -c $? -o $@ `pkg-config --cflags --libs openssl` -lcrypto
